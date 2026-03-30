@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.spark.app</groupId>
+    <artifactId>spark-data-analysis</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>Spark Data Analysis</name>
+    <description>基于 Apache Spark 的数据分析项目</description>
+
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <spark.version>3.5.7</spark.version>
+        <scala.binary.version>2.12</scala.binary.version>
+        <junit.version>5.10.2</junit.version>
+    </properties>
+
+    <dependencies>
+        <!-- Apache Spark Core -->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_${scala.binary.version}</artifactId>
+            <version>${spark.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Apache Spark SQL -->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql_${scala.binary.version}</artifactId>
+            <version>${spark.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- JUnit 5 for testing -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Maven Compiler Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                </configuration>
+            </plugin>
+
+            <!-- Maven Shade Plugin for building fat jar -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.2</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>com.spark.app.WordCount</mainClass>
+                                </transformer>
+                            </transformers>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Maven Surefire Plugin for running tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <argLine>
+                        --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
+                        --add-opens=java.base/java.lang=ALL-UNNAMED
+                        --add-opens=java.base/java.lang.invoke=ALL-UNNAMED
+                        --add-opens=java.base/java.io=ALL-UNNAMED
+                        --add-opens=java.base/java.net=ALL-UNNAMED
+                        --add-opens=java.base/java.nio=ALL-UNNAMED
+                        --add-opens=java.base/java.util=ALL-UNNAMED
+                        --add-opens=java.base/java.util.concurrent=ALL-UNNAMED
+                        --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED
+                        --add-opens=java.base/jdk.internal.ref=ALL-UNNAMED
+                        --add-opens=java.base/sun.security.action=ALL-UNNAMED
+                    </argLine>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
