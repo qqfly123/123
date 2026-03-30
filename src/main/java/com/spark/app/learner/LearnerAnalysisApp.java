@@ -4,6 +4,8 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
+import static org.apache.spark.sql.functions.col;
+
 /**
  * LearnerAnalysisApp - 终身学习者能力演进与路径推荐系统主入口。
  *
@@ -55,7 +57,7 @@ public class LearnerAnalysisApp {
             System.out.println("\n====== 学习者能力画像 ======");
             Dataset<Row> skillProfile = CapabilityProfiler.buildSkillProfile(records, skills);
             if (learnerId != null) {
-                skillProfile.filter("learner_id = '" + learnerId + "'").show(50, false);
+                skillProfile.filter(col("learner_id").equalTo(learnerId)).show(50, false);
             } else {
                 skillProfile.show(50, false);
             }
@@ -70,7 +72,7 @@ public class LearnerAnalysisApp {
             System.out.println("====== 技能演进时间线 ======");
             Dataset<Row> timeline = CapabilityEvolution.buildEvolutionTimeline(records, skills);
             if (learnerId != null) {
-                timeline.filter("learner_id = '" + learnerId + "'").show(50, false);
+                timeline.filter(col("learner_id").equalTo(learnerId)).show(50, false);
             } else {
                 timeline.show(50, false);
             }
