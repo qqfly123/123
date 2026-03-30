@@ -9,8 +9,11 @@ import static org.apache.spark.sql.functions.col;
 /**
  * LearnerAnalysisApp - 终身学习者能力演进与路径推荐系统主入口。
  *
- * <p>整合能力画像、能力演进追踪和学习路径推荐三大模块，
- * 为终身学习者提供全方位的能力分析与个性化路径建议。</p>
+ * <p>整合三个阶段的六大分析模块，为终身学习者提供全方位的能力分析与个性化路径建议。</p>
+ *
+ * <p><strong>阶段一：</strong>能力画像 + 能力演进 + 路径推荐<br>
+ * <strong>阶段二：</strong>学习者相似度 + 协同过滤推荐<br>
+ * <strong>阶段三：</strong>学习效率分析 + 技能衰退预测</p>
  *
  * <p>用法：
  * <pre>
@@ -53,7 +56,10 @@ public class LearnerAnalysisApp {
             System.out.println("课程库: " + courses.count() + " 门");
             System.out.println("学习记录: " + records.count() + " 条");
 
-            // ========== 能力画像 ==========
+            // ==================== 阶段一 ====================
+            System.out.println("\n========== 阶段一：能力画像与路径推荐 ==========");
+
+            // 能力画像
             System.out.println("\n====== 学习者能力画像 ======");
             Dataset<Row> skillProfile = CapabilityProfiler.buildSkillProfile(records, skills);
             if (learnerId != null) {
@@ -68,7 +74,7 @@ public class LearnerAnalysisApp {
             System.out.println("====== 综合能力评级 ======");
             CapabilityProfiler.getOverallRating(skillProfile).show(false);
 
-            // ========== 能力演进 ==========
+            // 能力演进
             System.out.println("====== 技能演进时间线 ======");
             Dataset<Row> timeline = CapabilityEvolution.buildEvolutionTimeline(records, skills);
             if (learnerId != null) {
@@ -83,7 +89,7 @@ public class LearnerAnalysisApp {
             System.out.println("====== 月度学习活跃度 ======");
             CapabilityEvolution.getMonthlyActivity(records).show(50, false);
 
-            // ========== 路径推荐 ==========
+            // 路径推荐
             if (learnerId != null) {
                 System.out.println("====== 技能缺口分析 (学习者: " + learnerId + ") ======");
                 PathRecommender.identifySkillGaps(skills, records, learnerId).show(false);
@@ -94,13 +100,66 @@ public class LearnerAnalysisApp {
                 System.out.println("====== 推荐学习路径 (学习者: " + learnerId + ") ======");
                 PathRecommender.generateLearningPath(courses, records, learnerId, 5).show(false);
             } else {
-                // 为所有学习者生成推荐
                 String[] learnerIds = (String[]) learners.select("learner_id")
                         .as(org.apache.spark.sql.Encoders.STRING()).collectAsList().toArray(new String[0]);
                 for (String lid : learnerIds) {
                     System.out.println("\n====== 推荐学习路径 (学习者: " + lid + ") ======");
                     PathRecommender.generateLearningPath(courses, records, lid, 3).show(false);
                 }
+            }
+
+            // ==================== 阶段二 ====================
+            System.out.println("\n========== 阶段二：相似度与协同推荐 ==========");
+
+            System.out.println("====== 学习者相似度矩阵 ======");
+            LearnerSimilarity.computeAllSimilarities(records).show(50, false);
+
+            if (learnerId != null) {
+                System.out.println("====== 相似学习者 (学习者: " + learnerId + ") ======");
+                LearnerSimilarity.findSimilarLearners(records, learnerId, 5).show(false);
+
+                System.out.println("====== 协同过滤推荐课程 (学习者: " + learnerId + ") ======");
+                CollaborativeRecommender.recommendBySimilarity(
+                        records, courses, learnerId, 3, 5).show(false);
+            }
+
+            System.out.println("====== 热门技能排行 ======");
+            CollaborativeRecommender.discoverPopularSkills(records, skills, 10).show(false);
+
+            // ==================== 阶段三 ====================
+            System.out.println("\n========== 阶段三：效率分析与衰退预测 ==========");
+
+            System.out.println("====== 学习效率分析 ======");
+            Dataset<Row> efficiency = LearningEfficiency.computeSkillEfficiency(records, skills);
+            if (learnerId != null) {
+                efficiency.filter(col("learner_id").equalTo(learnerId)).show(50, false);
+            } else {
+                efficiency.show(50, false);
+            }
+
+            System.out.println("====== 按难度等级效率对比 ======");
+            LearningEfficiency.efficiencyByDifficulty(records, skills).show(50, false);
+
+            System.out.println("====== 学习效率排行榜 ======");
+            LearningEfficiency.getEfficiencyLeaderboard(records, skills).show(false);
+
+            // 技能衰退预测（使用当前日期作为参考）
+            String referenceDate = java.time.LocalDate.now().toString();
+            System.out.println("====== 技能衰退预测 (参考日期: " + referenceDate + ") ======");
+            Dataset<Row> decay = SkillDecayPredictor.predictSkillDecay(records, skills, referenceDate);
+            if (learnerId != null) {
+                decay.filter(col("learner_id").equalTo(learnerId)).show(50, false);
+            } else {
+                decay.show(50, false);
+            }
+
+            System.out.println("====== 需要复习的技能 ======");
+            SkillDecayPredictor.identifyReviewNeeded(records, skills, referenceDate).show(50, false);
+
+            if (learnerId != null) {
+                System.out.println("====== 复习优先级 (学习者: " + learnerId + ") ======");
+                SkillDecayPredictor.getReviewPriority(
+                        records, skills, referenceDate, learnerId).show(false);
             }
 
         } finally {
