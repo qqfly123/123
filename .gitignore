@@ -9,3 +9,4 @@ target/
 .project
 .DS_Store
 node_modules/
+data/users.json

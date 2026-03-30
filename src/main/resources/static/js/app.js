@@ -7,10 +7,36 @@ let allCharts = [];
 
 // ===== 初始化 =====
 document.addEventListener('DOMContentLoaded', () => {
-    loadLearnerSelector();
-    navigateTo('dashboard');
+    checkAuth();
     window.addEventListener('resize', () => allCharts.forEach(c => c && c.resize()));
 });
+
+async function checkAuth() {
+    try {
+        const resp = await fetch('/auth/status');
+        if (!resp.ok) {
+            window.location.href = '/login.html';
+            return;
+        }
+        const user = await resp.json();
+        const nameEl = document.getElementById('userDisplayName');
+        if (nameEl) nameEl.textContent = '👤 ' + (user.displayName || user.username);
+    } catch (e) {
+        window.location.href = '/login.html';
+        return;
+    }
+    loadLearnerSelector();
+    navigateTo('dashboard');
+}
+
+async function handleLogout() {
+    try {
+        await fetch('/auth/logout', { method: 'POST' });
+    } catch (e) {
+        // ignore
+    }
+    window.location.href = '/login.html';
+}
 
 function navigateTo(page) {
     currentPage = page;

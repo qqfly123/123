@@ -58,11 +58,17 @@
         <main class="main-content">
             <div class="top-bar">
                 <h1 class="page-title" id="pageTitle">仪表盘</h1>
-                <div class="learner-select">
-                    <label for="learnerSelect">选择学习者：</label>
-                    <select id="learnerSelect" onchange="onLearnerChange(this)">
-                        <option value="">全部学习者</option>
-                    </select>
+                <div style="display:flex;align-items:center;gap:16px;">
+                    <div class="learner-select">
+                        <label for="learnerSelect">选择学习者：</label>
+                        <select id="learnerSelect" onchange="onLearnerChange(this)">
+                            <option value="">全部学习者</option>
+                        </select>
+                    </div>
+                    <div id="userInfo" style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text-secondary);">
+                        <span id="userDisplayName"></span>
+                        <button onclick="handleLogout()" style="padding:4px 12px;border:1px solid var(--border);border-radius:6px;background:var(--card-bg);cursor:pointer;font-size:13px;">退出</button>
+                    </div>
                 </div>
             </div>
             <div id="pageContent">
