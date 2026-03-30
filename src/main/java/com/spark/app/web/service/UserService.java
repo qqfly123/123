@@ -14,8 +14,6 @@ import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -110,12 +108,17 @@ public class UserService {
 
     private String hashPassword(String password, String salt) {
         try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            digest.update(salt.getBytes(StandardCharsets.UTF_8));
-            byte[] hash = digest.digest(password.getBytes(StandardCharsets.UTF_8));
+            javax.crypto.SecretKeyFactory factory =
+                    javax.crypto.SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+            java.security.spec.KeySpec spec = new javax.crypto.spec.PBEKeySpec(
+                    password.toCharArray(),
+                    salt.getBytes(StandardCharsets.UTF_8),
+                    65536,  // iterations - high cost to resist brute-force
+                    256);   // key length in bits
+            byte[] hash = factory.generateSecret(spec).getEncoded();
             return Base64.getEncoder().encodeToString(hash);
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 not available", e);
+        } catch (Exception e) {
+            throw new IllegalStateException("PBKDF2 hashing failed", e);
         }
     }
 
