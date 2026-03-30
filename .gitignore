@@ -8,3 +8,4 @@ target/
 .classpath
 .project
 .DS_Store
+node_modules/

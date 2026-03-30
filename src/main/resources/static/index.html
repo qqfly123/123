@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>终身学习者能力分析系统</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 侧边栏导航 -->
+        <nav class="sidebar">
+            <div class="sidebar-title">
+                📚 学习者分析系统
+                <small>Lifelong Learner Analytics</small>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-group-label">概览</div>
+                <div class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')">
+                    📊 <span>仪表盘</span>
+                </div>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-group-label">阶段一</div>
+                <div class="nav-item" data-page="profile" onclick="navigateTo('profile')">
+                    🎯 <span>能力画像</span>
+                </div>
+                <div class="nav-item" data-page="evolution" onclick="navigateTo('evolution')">
+                    📈 <span>能力演进</span>
+                </div>
+                <div class="nav-item" data-page="path" onclick="navigateTo('path')">
+                    🗺️ <span>路径推荐</span>
+                </div>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-group-label">阶段二</div>
+                <div class="nav-item" data-page="similarity" onclick="navigateTo('similarity')">
+                    🔗 <span>相似度与协同推荐</span>
+                </div>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-group-label">阶段三</div>
+                <div class="nav-item" data-page="efficiency" onclick="navigateTo('efficiency')">
+                    ⚡ <span>学习效率</span>
+                </div>
+                <div class="nav-item" data-page="decay" onclick="navigateTo('decay')">
+                    📉 <span>技能衰退预测</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <div class="top-bar">
+                <h1 class="page-title" id="pageTitle">仪表盘</h1>
+                <div class="learner-select">
+                    <label for="learnerSelect">选择学习者：</label>
+                    <select id="learnerSelect" onchange="onLearnerChange(this)">
+                        <option value="">全部学习者</option>
+                    </select>
+                </div>
+            </div>
+            <div id="pageContent">
+                <div class="loading">加载中...</div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
