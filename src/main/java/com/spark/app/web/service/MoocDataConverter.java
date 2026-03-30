@@ -68,8 +68,17 @@ public class MoocDataConverter {
      * 检测 mooc_raw 目录下的文件状态。
      */
     public Map<String, Object> detectRawFiles() {
+        return detectRawFiles(null);
+    }
+
+    /**
+     * 检测指定目录（或默认 mooc_raw）下的文件状态。
+     *
+     * @param sourcePath 自定义源目录路径，为 null 时使用默认 mooc_raw
+     */
+    public Map<String, Object> detectRawFiles(String sourcePath) {
         Map<String, Object> result = new LinkedHashMap<>();
-        Path rawDir = Paths.get(dataDir, "mooc_raw");
+        Path rawDir = resolveSourceDir(sourcePath);
 
         if (!Files.isDirectory(rawDir)) {
             result.put("exists", false);
@@ -98,8 +107,17 @@ public class MoocDataConverter {
      * 执行转换：读取 mooc_raw/ 下的 CSV → 输出系统标准 CSV 到 data/ 。
      */
     public ConvertResult convert() {
+        return convert(null);
+    }
+
+    /**
+     * 执行转换：读取指定目录（或默认 mooc_raw/）下的 CSV → 输出系统标准 CSV 到 data/ 。
+     *
+     * @param sourcePath 自定义源目录路径，为 null 时使用默认 mooc_raw
+     */
+    public ConvertResult convert(String sourcePath) {
         ConvertResult result = new ConvertResult();
-        Path rawDir = Paths.get(dataDir, "mooc_raw");
+        Path rawDir = resolveSourceDir(sourcePath);
 
         if (!Files.isDirectory(rawDir)) {
             result.success = false;
@@ -148,6 +166,18 @@ public class MoocDataConverter {
             result.message = "转换失败: " + e.getMessage();
         }
         return result;
+    }
+
+    /* ===== 路径解析 ===== */
+
+    /**
+     * 解析源目录路径。如果提供了自定义路径则直接使用，否则使用默认 mooc_raw 目录。
+     */
+    private Path resolveSourceDir(String sourcePath) {
+        if (sourcePath != null && !sourcePath.trim().isEmpty()) {
+            return Paths.get(sourcePath.trim());
+        }
+        return Paths.get(dataDir, "mooc_raw");
     }
 
     /* ===== 内部数据结构 ===== */

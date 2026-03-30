@@ -46,6 +46,6 @@ const api = {
     reviewPriority: (id) => api.get(`/decay/priority/${id}`),
 
     // 数据导入
-    detectRawFiles: () => api.get('/import/detect'),
-    importMooc: () => api.post('/import/mooc'),
+    detectRawFiles: (sourcePath) => api.get('/import/detect' + (sourcePath ? '?sourcePath=' + encodeURIComponent(sourcePath) : '')),
+    importMooc: (sourcePath) => api.post('/import/mooc' + (sourcePath ? '?sourcePath=' + encodeURIComponent(sourcePath) : '')),
 };

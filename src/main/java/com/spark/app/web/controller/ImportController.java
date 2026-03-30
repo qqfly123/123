@@ -27,19 +27,25 @@ public class ImportController {
     }
 
     /**
-     * 检测 mooc_raw 目录下的原始数据文件。
+     * 检测 mooc_raw 目录（或自定义路径）下的原始数据文件。
+     *
+     * @param sourcePath 可选的自定义数据目录路径
      */
     @GetMapping("/detect")
-    public ResponseEntity<Map<String, Object>> detectRawFiles() {
-        return ResponseEntity.ok(converter.detectRawFiles());
+    public ResponseEntity<Map<String, Object>> detectRawFiles(
+            @RequestParam(required = false) String sourcePath) {
+        return ResponseEntity.ok(converter.detectRawFiles(sourcePath));
     }
 
     /**
-     * 执行 MOOC 数据导入：转换 mooc_raw/ → data/ 标准 CSV，并重新加载 Spark 数据。
+     * 执行 MOOC 数据导入：转换源目录 CSV → data/ 标准 CSV，并重新加载 Spark 数据。
+     *
+     * @param sourcePath 可选的自定义数据目录路径
      */
     @PostMapping("/mooc")
-    public ResponseEntity<Map<String, Object>> importMoocData() {
-        ConvertResult result = converter.convert();
+    public ResponseEntity<Map<String, Object>> importMoocData(
+            @RequestParam(required = false) String sourcePath) {
+        ConvertResult result = converter.convert(sourcePath);
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("success", result.success);

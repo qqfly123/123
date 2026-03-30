@@ -538,8 +538,16 @@ async function renderImport(container) {
         <div class="card" style="max-width:900px;">
             <div class="card-title">📥 MOOC 数据导入</div>
             <p style="color:var(--text-secondary);margin-bottom:16px;">
-                将你的MOOC平台导出的CSV文件放到 <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;">data/mooc_raw/</code> 目录中，系统会自动检测列名并转换为标准格式。
+                将你的MOOC平台导出的CSV文件放到 <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;">data/mooc_raw/</code> 目录中，或指定你本地电脑上的CSV文件夹路径。
             </p>
+
+            <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:16px;margin-bottom:20px;">
+                <h4 style="margin:0 0 8px 0;color:#1e40af;">📂 自定义数据路径（可选）</h4>
+                <p style="color:#1e40af;font-size:13px;margin:0 0 8px 0;">如果CSV文件太大无法上传到项目中，可以直接指定本地文件夹路径：</p>
+                <input type="text" id="sourcePath" placeholder="例如: C:\\Users\\你的用户名\\Desktop\\moocdata"
+                    style="width:100%;padding:10px 12px;border:1px solid #93c5fd;border-radius:6px;font-size:14px;box-sizing:border-box;" />
+                <p style="color:#6b7280;font-size:12px;margin:6px 0 0 0;">留空则使用默认的 data/mooc_raw/ 目录</p>
+            </div>
 
             <div style="background:var(--bg);border-radius:8px;padding:16px;margin-bottom:20px;">
                 <h4 style="margin:0 0 8px 0;">📋 支持的列名（中英文均可）</h4>
@@ -578,9 +586,10 @@ async function renderImport(container) {
 
 async function detectMoocFiles() {
     const el = document.getElementById('detectResult');
+    const sourcePath = document.getElementById('sourcePath').value.trim();
     el.innerHTML = '<div class="loading">检测中...</div>';
     try {
-        const data = await api.detectRawFiles();
+        const data = await api.detectRawFiles(sourcePath || undefined);
         if (!data.exists) {
             el.innerHTML = '<div class="empty-state" style="padding:16px;">\u26a0\ufe0f ' + data.message + '</div>';
             return;
@@ -613,12 +622,13 @@ async function detectMoocFiles() {
 async function importMoocData() {
     const btn = document.getElementById('btnImport');
     const el = document.getElementById('importResult');
+    const sourcePath = document.getElementById('sourcePath').value.trim();
     btn.disabled = true;
     btn.textContent = '\u23f3 \u5bfc\u5165\u4e2d...';
     el.innerHTML = '<div class="loading">\u6b63\u5728\u8f6c\u6362\u6570\u636e\u5e76\u91cd\u65b0\u52a0\u8f7d...</div>';
 
     try {
-        const data = await api.importMooc();
+        const data = await api.importMooc(sourcePath || undefined);
         if (data.success) {
             el.innerHTML = '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;">' +
                 '<h4 style="margin:0 0 8px 0;color:#166534;">\ud83c\udf89 ' + data.message + '</h4>' +

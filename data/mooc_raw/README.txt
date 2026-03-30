@@ -5,6 +5,16 @@
 请将你从MOOC平台导出的CSV文件放到此文件夹中。
 系统会自动检测CSV文件中的列名并转换为系统所需格式。
 
+★ 如果文件太大无法上传到项目中：
+------------------------------------------
+你可以在系统的"数据导入"页面直接指定本地文件夹路径，
+例如: C:\Users\你的用户名\Desktop\moocdata
+系统会直接从你指定的路径读取CSV文件进行转换。
+
+也可以通过API传递路径参数：
+  GET  /api/import/detect?sourcePath=C:\Users\你的用户名\Desktop\moocdata
+  POST /api/import/mooc?sourcePath=C:\Users\你的用户名\Desktop\moocdata
+
 支持的数据类型（按文件自动识别）：
 ------------------------------------------
 
