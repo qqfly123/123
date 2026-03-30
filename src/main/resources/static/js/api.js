@@ -10,6 +10,12 @@ const api = {
         return resp.json();
     },
 
+    async post(endpoint) {
+        const resp = await fetch(`${API_BASE}${endpoint}`, { method: 'POST' });
+        if (!resp.ok) throw new Error(`API error: ${resp.status}`);
+        return resp.json();
+    },
+
     // 概览
     overview: () => api.get('/overview'),
     learners: () => api.get('/learners'),
@@ -38,4 +44,8 @@ const api = {
     skillDecay: (id) => api.get(`/decay/predict${id ? '?learnerId=' + id : ''}`),
     reviewNeeded: (id) => api.get(`/decay/review${id ? '?learnerId=' + id : ''}`),
     reviewPriority: (id) => api.get(`/decay/priority/${id}`),
+
+    // 数据导入
+    detectRawFiles: () => api.get('/import/detect'),
+    importMooc: () => api.post('/import/mooc'),
 };

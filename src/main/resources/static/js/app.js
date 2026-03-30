@@ -79,6 +79,7 @@ function renderPage(page) {
         similarity: renderSimilarity,
         efficiency: renderEfficiency,
         decay: renderDecay,
+        import: renderImport,
     };
     const handler = handlers[page];
     if (handler) handler(main);
@@ -529,4 +530,116 @@ async function renderDecay(container) {
     } catch (e) {
         container.innerHTML = `<div class="empty-state">加载失败: ${e.message}</div>`;
     }
+}
+
+// ===== 数据导入 =====
+async function renderImport(container) {
+    container.innerHTML = `
+        <div class="card" style="max-width:900px;">
+            <div class="card-title">📥 MOOC 数据导入</div>
+            <p style="color:var(--text-secondary);margin-bottom:16px;">
+                将你的MOOC平台导出的CSV文件放到 <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;">data/mooc_raw/</code> 目录中，系统会自动检测列名并转换为标准格式。
+            </p>
+
+            <div style="background:var(--bg);border-radius:8px;padding:16px;margin-bottom:20px;">
+                <h4 style="margin:0 0 8px 0;">📋 支持的列名（中英文均可）</h4>
+                <table class="data-table" style="font-size:13px;">
+                    <thead><tr><th>数据类型</th><th>支持的列名</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>用户ID</strong></td><td>user_id, 用户ID, student_id, learner_id, 学号</td></tr>
+                        <tr><td><strong>姓名</strong></td><td>username, name, 用户名, 姓名, 昵称</td></tr>
+                        <tr><td><strong>课程ID</strong></td><td>course_id, 课程ID, 课程编号</td></tr>
+                        <tr><td><strong>课程名</strong></td><td>course_name, 课程名, 课程名称, 课程</td></tr>
+                        <tr><td><strong>分类</strong></td><td>category, 分类, 类别, 领域, field</td></tr>
+                        <tr><td><strong>成绩</strong></td><td>score, grade, 成绩, 分数, 得分</td></tr>
+                        <tr><td><strong>完成日期</strong></td><td>completion_date, 完成时间, 完成日期, finish_date</td></tr>
+                        <tr><td><strong>学习时长</strong></td><td>study_hours, 学习时长, hours, duration, 学时</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="detectResult" style="margin-bottom:20px;"></div>
+
+            <div style="display:flex;gap:12px;">
+                <button onclick="detectMoocFiles()" style="padding:10px 24px;background:var(--primary);color:white;border:none;border-radius:8px;cursor:pointer;font-size:15px;">
+                    🔍 检测文件
+                </button>
+                <button onclick="importMoocData()" id="btnImport" style="padding:10px 24px;background:#10b981;color:white;border:none;border-radius:8px;cursor:pointer;font-size:15px;" disabled>
+                    🚀 执行导入
+                </button>
+            </div>
+
+            <div id="importResult" style="margin-top:20px;"></div>
+        </div>
+    `;
+
+    detectMoocFiles();
+}
+
+async function detectMoocFiles() {
+    const el = document.getElementById('detectResult');
+    el.innerHTML = '<div class="loading">检测中...</div>';
+    try {
+        const data = await api.detectRawFiles();
+        if (!data.exists) {
+            el.innerHTML = '<div class="empty-state" style="padding:16px;">\u26a0\ufe0f ' + data.message + '</div>';
+            return;
+        }
+        if (data.csvFileCount === 0) {
+            el.innerHTML = '<div class="empty-state" style="padding:16px;">\ud83d\udcc2 mooc_raw \u76ee\u5f55\u4e3a\u7a7a\uff0c\u8bf7\u653e\u5165CSV\u6587\u4ef6<br><small style="color:var(--text-secondary);">' + data.directory + '</small></div>';
+            return;
+        }
+
+        let html = '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;">' +
+            '<h4 style="margin:0 0 8px 0;color:#166534;">\u2705 \u68c0\u6d4b\u5230 ' + data.csvFileCount + ' \u4e2aCSV\u6587\u4ef6</h4>' +
+            '<table class="data-table" style="font-size:13px;">' +
+            '<thead><tr><th>\u6587\u4ef6\u540d</th><th>\u884c\u6570</th><th>\u8bc6\u522b\u7c7b\u578b</th><th>\u5217</th></tr></thead><tbody>';
+
+        for (const f of data.files) {
+            const statusIcon = f.status === 'ok' ? '\u2705' : '\u274c';
+            html += '<tr><td>' + statusIcon + ' ' + f.fileName + '</td>' +
+                '<td>' + (f.rowCount != null ? f.rowCount : '-') + '</td>' +
+                '<td><strong>' + (f.detectedType || '\u672a\u77e5') + '</strong></td>' +
+                '<td style="font-size:12px;color:var(--text-secondary);">' + (f.columns ? f.columns.join(', ') : '-') + '</td></tr>';
+        }
+        html += '</tbody></table></div>';
+        el.innerHTML = html;
+        document.getElementById('btnImport').disabled = false;
+    } catch (e) {
+        el.innerHTML = '<div class="empty-state" style="padding:16px;">\u68c0\u6d4b\u5931\u8d25: ' + e.message + '</div>';
+    }
+}
+
+async function importMoocData() {
+    const btn = document.getElementById('btnImport');
+    const el = document.getElementById('importResult');
+    btn.disabled = true;
+    btn.textContent = '\u23f3 \u5bfc\u5165\u4e2d...';
+    el.innerHTML = '<div class="loading">\u6b63\u5728\u8f6c\u6362\u6570\u636e\u5e76\u91cd\u65b0\u52a0\u8f7d...</div>';
+
+    try {
+        const data = await api.importMooc();
+        if (data.success) {
+            el.innerHTML = '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;">' +
+                '<h4 style="margin:0 0 8px 0;color:#166534;">\ud83c\udf89 ' + data.message + '</h4>' +
+                '<div class="stats-grid" style="margin-top:12px;">' +
+                '<div class="stat-card"><div class="stat-value">' + data.learnerCount + '</div><div class="stat-label">\u5b66\u4e60\u8005</div></div>' +
+                '<div class="stat-card"><div class="stat-value">' + data.skillCount + '</div><div class="stat-label">\u6280\u80fd</div></div>' +
+                '<div class="stat-card"><div class="stat-value">' + data.courseCount + '</div><div class="stat-label">\u8bfe\u7a0b</div></div>' +
+                '<div class="stat-card"><div class="stat-value">' + data.recordCount + '</div><div class="stat-label">\u5b66\u4e60\u8bb0\u5f55</div></div>' +
+                '</div>' +
+                (data.reloaded ? '<p style="margin-top:12px;color:#166534;">\u2705 Spark \u6570\u636e\u5df2\u91cd\u65b0\u52a0\u8f7d\uff0c\u53ef\u4ee5\u5f00\u59cb\u5206\u6790\uff01</p>'
+                    : '<p style="margin-top:12px;color:#b91c1c;">\u26a0\ufe0f \u6570\u636e\u91cd\u8f7d\u5931\u8d25: ' + (data.reloadError || '') + '</p>') +
+                (data.warnings && data.warnings.length > 0 ? '<p style="margin-top:8px;color:#92400e;">\u26a0\ufe0f \u8b66\u544a: ' + data.warnings.join('; ') + '</p>' : '') +
+                '</div>';
+            loadLearnerSelector();
+        } else {
+            el.innerHTML = '<div class="empty-state" style="padding:16px;color:#b91c1c;">\u274c ' + data.message + '</div>';
+        }
+    } catch (e) {
+        el.innerHTML = '<div class="empty-state" style="padding:16px;">\u5bfc\u5165\u5931\u8d25: ' + e.message + '</div>';
+    }
+
+    btn.disabled = false;
+    btn.textContent = '\ud83d\ude80 \u6267\u884c\u5bfc\u5165';
 }
